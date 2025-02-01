@@ -1,7 +1,8 @@
 import React, { useState } from "react";
+import ollama, { ChatResponse } from "ollama";
 
 interface IMessageType {
-  role: "AI" | "USER";
+  role: "assistant" | "user";
   message: string;
 }
 
@@ -9,7 +10,7 @@ const Message: React.FC<IMessageType> = ({ role, message }) => {
   return (
     <div
       className={`p-3 rounded-lg w-fit ${
-        role === "USER" ? "bg-primary text-white self-end" : "bg-slate-200"
+        role === "user" ? "bg-primary text-white self-end" : "bg-slate-200"
       }`}
     >
       {message}
@@ -19,7 +20,7 @@ const Message: React.FC<IMessageType> = ({ role, message }) => {
 
 const App: React.FC = () => {
   const [messages, setMessages] = useState<IMessageType[]>([
-    { role: "AI", message: "Hello, how can I help you?" },
+    { role: "assistant", message: "Hello, how can I help you?" },
   ]);
   const [input, setInput] = useState<string>("");
 
@@ -28,11 +29,21 @@ const App: React.FC = () => {
 
     if (input.trim()) {
       const message: IMessageType = {
-        role: "USER",
+        role: "user",
         message: input,
       };
 
       setMessages((prev: IMessageType[]) => [...prev, message]);
+
+      const response: ChatResponse = await ollama.chat({
+        model: "deepseek-r1:1.5b",
+        messages: [{ role: "user", content: input }],
+      });
+
+      setMessages((prev: IMessageType[]) => [
+        ...prev,
+        { role: "assistant", message: response.message.content },
+      ]);
     }
 
     setInput("");
